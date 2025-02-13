@@ -3,16 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Viewer</title>
-    <script defer src="app.js"></script>
+    <title>Trang Markdown</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
+
     <header>
         <nav>
-            <a href="/trang1.md">Trang 1</a> |
+            <a href="/trang1.md">Trang 1</a>
             <a href="/trang2.md">Trang 2</a>
         </nav>
     </header>
-    <main id="content">Đang tải...</main>
+
+    <main id="content">
+        <h2>Chào mừng!</h2>
+        <p>Chọn một trang để hiển thị nội dung.</p>
+    </main>
+
+    <script src="app.js"></script>
+
 </body>
 </html>
