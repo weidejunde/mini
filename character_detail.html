@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Chữ Hán</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .character-detail {
+            margin-top: 20px;
+        }
+        .character-detail th, .character-detail td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chi Tiết Chữ Hán</h1>
+    
+    <div id="detail-content">
+        <p>Đang tải thông tin...</p>
+    </div>
+
+    <script>
+        // Lấy dữ liệu từ localStorage
+        const characterDetail = JSON.parse(localStorage.getItem('characterDetail'));
+
+        // Nếu không có dữ liệu, hiển thị thông báo lỗi
+        if (!characterDetail) {
+            document.getElementById('detail-content').innerHTML = '<p>Không tìm thấy thông tin chi tiết.</p>';
+        } else {
+            // Tạo bảng hiển thị thông tin chi tiết
+            const table = `
+                <table class="character-detail">
+                    <tr>
+                        <th>Chữ</th>
+                        <td>${characterDetail.char}</td>
+                    </tr>
+                    <tr>
+                        <th>Ý nghĩa</th>
+                        <td>${characterDetail.meaning}</td>
+                    </tr>
+                    <tr>
+                        <th>Pinyin</th>
+                        <td>${characterDetail.pinyin}</td>
+                    </tr>
+                    <tr>
+                        <th>Vietnamese</th>
+                        <td>${characterDetail.vietnamese}</td>
+                    </tr>
+                    <tr>
+                        <th>Thành phần</th>
+                        <td>${characterDetail.components}</td>
+                    </tr>
+                    <tr>
+                        <th>Bộ thủ</th>
+                        <td>${characterDetail.radical}</td>
+                    </tr>
+                    <tr>
+                        <th>Chữ đồng nghĩa</th>
+                        <td>${characterDetail.synonyms.join(", ") || 'Không có'}</td>
+                    </tr>
+                    <tr>
+                        <th>Chữ trái nghĩa</th>
+                        <td>${characterDetail.antonyms.join(", ") || 'Không có'}</td>
+                    </tr>
+                    <tr>
+                        <th>Giản thể</th>
+                        <td>${characterDetail.simplified || 'Không có'}</td>
+                    </tr>
+                    <tr>
+                        <th>Phồn thể</th>
+                        <td>${characterDetail.traditional || 'Không có'}</td>
+                    </tr>
+                </table>
+            `;
+
+            document.getElementById('detail-content').innerHTML = table;
+        }
+    </script>
+</body>
+</html>
