@@ -1,27 +1,38 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang Markdown</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <title>Home | GitHub Style</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-    <header>
-        <nav>
-            <a href="/file/trang1.md">Trang 1</a>
-            <a href="/file/trang2.md">Trang 2</a>
-        </nav>
-    </header>
-
-    <main id="content">
-        <h2>Chào mừng!</h2>
-        <p>Chọn một trang để hiển thị nội dung.</p>
+    <div id="header-placeholder"></div>
+    
+    <main>
+        <div class="content-wrapper">
+            <div class="repo-card">
+                <h3>Giới thiệu về dân tộc Dao</h3>
+                <p>Dân tộc Dao là một trong những dân tộc thiểu số sinh sống chủ yếu ở vùng núi phía Bắc Việt Nam, Lào, Trung Quốc và Thái Lan. Người Dao có nền văn hóa phong phú, chữ viết riêng và nhiều phong tục truyền thống đặc sắc.</p>
+            </div>
+    
+            <div class="repo-card">
+                <h3>Nguồn gốc</h3>
+                <p>Người Dao có nguồn gốc từ miền Nam Trung Quốc, sau đó di cư xuống Việt Nam và các nước lân cận từ nhiều thế kỷ trước. Họ tự gọi mình là "Miền" (㕦) và có nhiều nhóm khác nhau như Dao Đỏ, Dao Quần Chẹt, Dao Thanh Y...</p>
+            </div>
+    
+            <div class="repo-card">
+                <h3>Ngôn ngữ và chữ viết</h3>
+                <p>Tiếng Dao có nhiều phương ngữ khác nhau, thường sử dụng chữ Hán Dao và chữ Nôm Dao. Hiện nay, một số nhóm đang chuẩn hóa chữ viết để phù hợp với ngôn ngữ và hệ thống chữ cái hiện đại.</p>
+            </div>
+    
+            <div class="repo-card">
+                <h3>Phong tục và văn hóa</h3>
+                <p>Người Dao có nhiều nghi lễ truyền thống như lễ cấp sắc, lễ cưới, lễ cầu mùa. Trang phục của họ cũng rất đặc trưng với hoa văn thổ cẩm tinh xảo.</p>
+            </div>
+        </div>
     </main>
 
-    <script src="app.js"></script>
-
+    <script src="loadHeader.js"></script>
 </body>
 </html>

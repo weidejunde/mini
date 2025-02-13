@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PEZ0XRXXQC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-PEZ0XRXXQC');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yaozu IPA - Look up Yao Language Pronunciation | Tra cứu Phát âm tiếng Dao</title>
+    <meta name="description" content="Tra cứu phát âm tiếng Dao bằng ký hiệu IPA. Hỗ trợ người học và nghiên cứu ngôn ngữ Dao dễ dàng và chính xác." />
+
+    <!-- Favicon -->
+    <link rel="icon" href="https://img.icons8.com/3d-fluency/94/bookmark.png" type="image/png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">  <!-- Header styles -->
+    <link rel="stylesheet" href="css/ipa.css">
+    <link rel="stylesheet" href="css/root.css">
+</head>
+
+<body>
+    <!-- Header placeholder -->
+    <div id="header-placeholder"></div>
+    <div id="tieudex" style="display: none;">IPA</div>
+    <main class="ipa-content">
+        <div class="ipa-controls">
+            <!-- Dialect selector and conversion toggle -->
+            <div id="button-container">
+                <select 
+                    id="chọnPhươngNgữIPA" 
+                    onchange="tảiFileExcel()"
+                    aria-label="Chọn phương ngữ"
+                >
+                </select>
+                <div id="nut">
+                    <button 
+                        onclick="toggleChuyểnĐổiIPA()"
+                        aria-label="Chuyển đổi ký hiệu"
+                    >
+                        ˩⇔1
+                    </button>
+                </div>
+            </div>
+
+            <!-- Input fields -->
+            <div id="input-container">
+                <input 
+                    type="text" 
+                    id="timkiemx" 
+                    placeholder="Nhập từ cần tra cứu..." 
+                    aria-label="Nhập dữ liệu"
+                    oninput="xửLýĐầuVào()"
+                >
+            </div>
+
+            <!-- Processing display -->
+            <div id="chuỗiThựcTếKhiXửLý" aria-live="polite"></div>
+
+            <!-- Filter input -->
+            <div class="filter-container">
+                <input 
+                    type="text" 
+                    id="ôNhậpLọc" 
+                    placeholder="Lọc kết quả..." 
+                    aria-label="Lọc kết quả"
+                    oninput="locTieuDe()"
+                >
+            </div>
+
+            <!-- Search results -->
+            <div 
+                id="kếtQuảTìmKiếm" 
+                aria-live="polite"
+            >
+                🔄
+            </div>
+        </div>
+
+        <!-- Data table container -->
+        <div class="table-container">
+            <div id="khungBảng"></div>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="loadHeader.js"></script>
+    <script src="lib/xlsx.full.min.js"></script>
+    <script src="js/iframe.js"></script>
+<script>
+let jsonData = [];  // Biến lưu trữ dữ liệu từ Excel
+
+// Hàm đọc và hiển thị dữ liệu từ file Excel
+function tảiFileExcel() {
+    fetch('data/ipa.xlsx') // Tải file dian.xlsx
+        .then(response => response.arrayBuffer())
+        .then(data => {
+            const workbook = XLSX.read(data, { type: 'array' });
+
+            // Lấy tên của sheet được chọn
+            const selectedSheet = document.getElementById('chọnPhươngNgữIPA').value;
+
+            // Kiểm tra và lấy sheet được chọn
+            const worksheet = workbook.Sheets[selectedSheet];
+            if (!worksheet) {
+                document.getElementById('khungBảng').innerHTML = `<p>Sheet '${selectedSheet}' không tồn tại!</p>`;
+                return;
+            }
+
+            // Chuyển đổi dữ liệu sheet thành JSON, giữ ô trống
+            jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+            // Hiển thị dữ liệu dưới dạng bảng HTML
+            displayTable(jsonData);
+
+            // Cập nhật kết quả tìm kiếm sau khi đổi sheet
+            xửLýĐầuVào();
+        })
+        .catch(error => {
+            console.error('Lỗi khi đọc file Excel:', error);
+            document.getElementById('khungBảng').innerHTML = "<p>Lỗi khi đọc file Excel.</p>";
+        });
+}
+
+// Hàm hiển thị bảng
+function displayTable(data) {
+    const table = document.createElement('table');
+    data.forEach((row, rowIndex) => {
+        const tr = document.createElement('tr');
+        row.forEach(cell => {
+            const cellElement = document.createElement(rowIndex === 0 ? 'th' : 'td');
+            cellElement.textContent = cell; // Hiển thị nội dung ô
+            tr.appendChild(cellElement);
+        });
+        table.appendChild(tr);
+    });
+
+    // Thêm bảng vào trang
+    const outputDiv = document.getElementById('khungBảng');
+    outputDiv.innerHTML = ''; // Xóa nội dung cũ
+    outputDiv.appendChild(table);
+}
+
+// Tách thành phụ âm, vần, và thanh điệu với ưu tiên thanh điệu 2 ký tự trước
+function splitTerm(searchTerm) {
+    const phuAmLengths = [5, 4, 3, 2, 1];
+    const vanLengths = [4, 3, 2, 1];
+    const thanhDieuLengths = [2, 1];
+    let phuAm = '', van = '', thanhDieu = '';
+
+    // Tìm phụ âm
+    for (let len of phuAmLengths) {
+        const potentialPhuAm = searchTerm.slice(0, len);
+        if (isPhuAmValid(potentialPhuAm)) {
+            phuAm = potentialPhuAm;
+            searchTerm = searchTerm.slice(len);
+            break;
+        }
+    }
+
+    // Tìm vần
+    for (let len of vanLengths) {
+        const potentialVan = searchTerm.slice(0, len);
+        if (isVanValid(potentialVan)) {
+            van = potentialVan;
+            searchTerm = searchTerm.slice(len);
+            break;
+        }
+    }
+
+    // Tìm thanh điệu, bắt đầu từ ký tự thứ hai
+    for (let len of thanhDieuLengths) {
+        const potentialThanhDieu = searchTerm.slice(1, 1 + len);
+        if (isThanhDieuValid(potentialThanhDieu) || potentialThanhDieu === '-') {
+            thanhDieu = potentialThanhDieu;
+            searchTerm = searchTerm.slice(1 + len);
+            break;
+        }
+    }
+
+    return { phuAm, van, thanhDieu };
+}
+
+function isPhuAmValid(phuAm) {
+    return jsonData.some(row => row[0] === 'Phụ âm' && row.includes(phuAm));
+}
+
+function isVanValid(van) {
+    return jsonData.some(row => row[0] === 'Vần' && row.includes(van));
+}
+
+function isThanhDieuValid(thanhDieu) {
+    return thanhDieu === '-' || jsonData.some(row => row[0] === 'Thanh điệu' && row.includes(thanhDieu));
+}
+
+let ipaConversionEnabled = false;
+
+function toggleChuyểnĐổiIPA() {
+    ipaConversionEnabled = !ipaConversionEnabled;
+    xửLýĐầuVào(); // Gọi lại hàm xửLýĐầuVào để cập nhật kết quả
+}
+
+
+function chuyểnĐổiThanhĐiệuIPA(tone) {
+    const toneMap = {
+        '5': '˥',
+        '4': '˦',
+        '3': '˧',
+        '2': '˨',
+        '1': '˩',
+        
+    };
+
+    return toneMap[tone] || tone;
+}
+
+function chuyểnĐổiKýTựMUN(searchTerm) {
+    // Thay thế dấu gạch ngang thành 'j ' (j và khoảng trắng)
+    searchTerm = searchTerm.replace(/-/g, '- ');
+
+    // Thay đổi p, t, k, q ở cuối từ thành p^, t^, k^, q^
+    searchTerm = searchTerm.replace(/(p|t|k)(?=\s|$)/g, '$1^');
+
+    // Thay đổi ký tự r, s, c, l sau p, t, k, q và đứng cuối từ
+    searchTerm = searchTerm.replace(/(?<=[ptk])([rscl])(?=\s|$|-)/g, '^$1');
+
+    // Thay đổi trường hợp p, t, k, q trước dấu gạch ngang
+    searchTerm = searchTerm.replace(/(p|t|k)j/g, '$1^-' );
+
+    // Quy tắc thay đổi 'iu-' thành 'yu-'
+    searchTerm = searchTerm.replace(/iu([mnptk])/g, 'yu$1');
+
+    // Quy tắc thay đổi 'ui-' thành 'wi-'
+    searchTerm = searchTerm.replace(/ui([mnptk])/g, 'wi$1');
+
+    // Quy tắc thay đổi 'i' thành 'y'
+    searchTerm = searchTerm.replace(/i([aăeĕiĭoŏôŭâ])/g, 'y$1');
+
+    // Quy tắc thay đổi 'u' thành 'w' với nguyên âm sau u
+    searchTerm = searchTerm.replace(/u([aăeĕêĭŏuŭâ])/g, 'w$1');
+
+    // Quy tắc thay đổi 'nh' thành 'ny' nếu sau nh là một chữ cái cụ thể
+    searchTerm = searchTerm.replace(/nh([aăeĕiĭoôŏuŭâ])/g, 'ny$1');
+
+    // Quy tắc thay đổi 'ĭ' thành 'i' nếu sau đó không phải là (m n ng p t k)
+    searchTerm = searchTerm.replace(/ĭ(?![iumnptk])/g, 'i');
+
+    // Quy tắc thay đổi 'ŭ' thành 'u' nếu sau đó không phải là (m n ng p t k)
+    searchTerm = searchTerm.replace(/ŭ(?![iumnptk])/g, 'u');
+
+
+
+    return searchTerm;
+}
+
+
+
+
+
+function chuyểnĐổiKýTựMIEN(searchTerm) {
+    // Thay thế dấu gạch ngang thành 'j ' (j và khoảng trắng)
+    searchTerm = searchTerm.replace(/-/g, '- ');
+
+    // Thay đổi p, t, k, q ở cuối từ thành p^, t^, k^, q^
+    searchTerm = searchTerm.replace(/(p|t|k|q)(?=\s|$)/g, '$1^');
+
+    // Thay đổi ký tự r, s, c, l sau p, t, k, q và đứng cuối từ
+    searchTerm = searchTerm.replace(/(?<=[ptkq])([rscl])(?=\s|$|-)/g, '^$1');
+
+    // Thay đổi trường hợp p, t, k, q trước dấu gạch ngang
+    searchTerm = searchTerm.replace(/(p|t|k|q)j/g, '$1^-');
+    
+    
+// Quy tắc thay đổi 'nh' thành 'ny' nếu sau nh là một chữ cái cụ thể
+searchTerm = searchTerm.replace(/nh([aăeĕiĭoôŏuŭâ])/g, 'ny$1');
+
+    // Quy tắc thay đổi 'i' thành 'y'
+    searchTerm = searchTerm.replace(/i([aăoôuâ])([mnptkq])/g, 'j$1$2');
+    searchTerm = searchTerm.replace(/i([aăêâ])/g, 'j$1');
+
+    // Quy tắc thay đổi 'u' thành 'w'
+    searchTerm = searchTerm.replace(/u([aăeêiâ])([mnptkq])/g, 'w$1$2');
+    searchTerm = searchTerm.replace(/u([aăeêâ])/g, 'w$1');
+
+    searchTerm = searchTerm.replace(/([y])ie/g, '$1yê');
+    searchTerm = searchTerm.replace(/([w])uo/g, '$1wô');
+    searchTerm = searchTerm.replace(/ng/g, 'ŋ');
+    return searchTerm;
+}
+function xửLýĐầuVào() {
+    let searchTerm = document.getElementById('timkiemx').value.trim().toLowerCase();
+
+    // Lấy sheet được chọn từ select box
+    const selectedSheet = document.getElementById('chọnPhươngNgữIPA').value;
+
+    // Điều chỉnh ký tự trước khi tìm kiếm dựa trên sheet
+    if (selectedSheet === "QMun") {
+        searchTerm = chuyểnĐổiKýTựMUN(searchTerm);
+    } else if (selectedSheet === "QMien") {
+        searchTerm = chuyểnĐổiKýTựMIEN(searchTerm);
+    }
+
+    // Hiển thị ký tự thực tế sau xử lý
+    document.getElementById('chuỗiThựcTếKhiXửLý').textContent = `${searchTerm}`;
+
+    // Danh sách các cột cần bỏ qua (cột 1 và cột 2)
+    const excludedColumns = [0, 1, 2, 3];
+
+    // 1. Lấy các tiêu đề cột từ bảng, bỏ qua các cột trong danh sách excludedColumns và các cột chứa dấu *
+    const displayedHeaders = Array.from(document.querySelectorAll('#khungBảng th'))
+        .map(th => th.textContent)
+        .filter((header, index) => !excludedColumns.includes(index + 1) && !header.includes('*'));
+
+    // 2. Xác định các chỉ số cột dựa trên tiêu đề, bỏ qua các cột trong danh sách excludedColumns và các cột chứa dấu *
+    const columnIndices = displayedHeaders
+        .map(header => jsonData[0].indexOf(header) + 1)
+        .filter(index => !excludedColumns.includes(index));
+
+    if (!searchTerm) {
+        document.getElementById('kếtQuảTìmKiếm').innerHTML = '';
+        return;
+    }
+
+    // Tách các từ chỉ bởi dấu cách
+    const words = searchTerm.split(/\s+/);
+
+    let results = [];
+    let columnHeaders = columnIndices.map(index => jsonData[0][index - 1]); // Lấy tiêu đề cột
+
+    let foundResults = false; // Biến kiểm tra nếu có kết quả hợp lệ
+
+    words.forEach(word => {
+        const { phuAm, van, thanhDieu, nhanManh } = ưuTiênÂmVịDàiNhất(word);
+
+        // Kiểm tra nếu không có vần (lỗi)
+        if (!van) {
+            results.push(`${word} (lỗi)`);
+            return; // Không làm gì thêm với từ lỗi này
+        }
+
+        let combinedResults = [];
+        columnIndices.forEach(index => {
+            let phuAmResult = '', vanResult = '', thanhDieuResult = '', nhanManhResult = '';
+
+            // Tìm phụ âm trong cột chỉ định
+            if (phuAm) {
+                const phuAmRow = jsonData.find(row => row[0] === 'Phụ âm' && row[2] === phuAm);
+                if (phuAmRow) {
+                    phuAmResult = phuAmRow[index - 1];
+                }
+            }
+
+            // Tìm vần trong cột chỉ định
+            const vanRow = jsonData.find(row => row[0] === 'Vần' && row[2] === van);
+            if (vanRow) {
+                vanResult = vanRow[index - 1];
+            } else {
+                results.push(`${word} (lỗi)`);  // Thêm thông báo lỗi cho từ này
+                foundResults = false; // Không tìm thấy kết quả hợp lệ
+                return;
+            }
+
+            // Tìm thanh điệu trong cột chỉ định
+            if (thanhDieu) {
+                const thanhDieuRow = jsonData.find(row => row[0] === 'Thanh điệu' && row[2] === thanhDieu);
+                if (thanhDieuRow) {
+                    thanhDieuResult = thanhDieuRow[index - 1];
+                }
+            }
+
+            // Tìm nhấn mạnh trong cột chỉ định
+            if (nhanManh) {
+                const nhanManhRow = jsonData.find(row => row[0] === 'Nhấn mạnh' && row[2] === nhanManh);
+                if (nhanManhRow) {
+                    nhanManhResult = nhanManhRow[index - 1];
+                }
+            }
+
+            let result = [
+    `<span style="color:#FF9966">${phuAmResult}</span>`,
+    `<span style="color:#FF9966">${vanResult}</span>`,
+    `<span style="color:#99CC00">${thanhDieuResult}</span>`,
+    `<span style="color:gray">${nhanManhResult}</span>`
+].join(''); // Kết hợp các phần tử lại với nhau mà không có khoảng cách giữa chúng
+
+if (ipaConversionEnabled) {
+    result = result.split('').map(char => (char === '.' ? char : chuyểnĐổiThanhĐiệuIPA(char))).join('');
+}
+
+const cleanedResult = result.replace(/\(.*?\)/g, '').trim();
+
+if (cleanedResult) {
+    foundResults = true;
+    combinedResults.push(cleanedResult);
+}
+
+        
+        });
+
+        // Nếu có kết quả hợp lệ, thêm vào kết quả cuối cùng
+        if (combinedResults.length) {
+            results.push(combinedResults);
+        } else {
+            results.push(`${word} (lỗi)`); // Thêm thông báo lỗi cho từ này
+        }
+    });
+
+    // Nếu không có kết quả hợp lệ, ẩn các cột hiển thị
+    if (!foundResults) {
+        document.getElementById('kếtQuảTìmKiếm').innerHTML = '<div class="thôngBáoLỗi"></div>';
+        document.querySelectorAll('.column-result').forEach(col => col.style.display = 'none');
+        return;
+    }
+
+    // Hiển thị kết quả riêng biệt cho từng cột chỉ khi có tiêu đề cột
+    let outputHTML = '';
+    columnIndices.forEach((index, colIdx) => {
+        const header = columnHeaders[colIdx];
+        if (header) { // Chỉ hiển thị cột có tiêu đề
+            const columnResults = results.map(result => result[colIdx]).filter(Boolean);
+
+            // Kiểm tra nếu cột có kết quả
+            if (columnResults.length > 0) {
+                outputHTML += `<div class="column-result">`;
+                outputHTML += `<div class="tiêuĐềKếtQuả">${header}</div>`;
+                outputHTML += `<div class="nộiDungKếtQuả">${columnResults.join(' ')}</div>`;
+                outputHTML += `</div>`;
+            }
+        }
+    });
+
+    // Cập nhật phần tử HTML để hiển thị kết quả
+    document.getElementById('kếtQuảTìmKiếm').innerHTML = outputHTML;
+
+    const searchOutput = document.getElementById('kếtQuảTìmKiếm');
+
+    // Xóa dấu cách sau dấu chấm và ký tự *
+    searchOutput.innerHTML = searchOutput.innerHTML
+        .replace(/\. /g, '.') // Thay '. ' thành '.'
+        .replace(/❤ /g, '')  // Thay '& ' thành ''
+        .replace(/\* /g, ''); // Thay '* ' thành ''
+
+    // Sau khi hiển thị kết quả, áp dụng lại bộ lọc
+    const filterText = document.getElementById('ôNhậpLọc').value.trim().toLowerCase();
+    if (filterText) {
+        locTieuDe(); // Gọi lại hàm lọc
+    }
+}
+
+
+
+
+    function ưuTiênÂmVịDàiNhất(searchTerm) {
+        const phuAmLengths = [4, 3, 2, 1];
+        const vanLengths = [3, 2, 1];
+        const thanhDieuLengths = [3, 2, 1];
+        const nhanManhLengths = [2, 1];
+        let phuAm = '', van = '', thanhDieu = '', nhanManh = '';
+
+        // Tìm phụ âm
+        for (let len of phuAmLengths) {
+            const potentialPhuAm = searchTerm.slice(0, len);
+            if (isPhuAmValid(potentialPhuAm)) {
+                phuAm = potentialPhuAm;
+                searchTerm = searchTerm.slice(len);
+                break;
+            }
+        }
+
+        // Tìm vần
+        for (let len of vanLengths) {
+            const potentialVan = searchTerm.slice(0, len);
+            if (isVanValid(potentialVan)) {
+                van = potentialVan;
+                searchTerm = searchTerm.slice(len);
+                break;
+            }
+        }
+
+        // Tìm nhấn mạnh trước, nếu có thì bỏ qua thanh điệu
+        for (let len of nhanManhLengths) {
+            const potentialNhanManh = searchTerm.slice(-len); // Lấy từ cuối từ
+            if (isNhanManhValid(potentialNhanManh)) {
+                nhanManh = potentialNhanManh;
+                searchTerm = searchTerm.slice(0, -len);
+                break;
+            }
+        }
+
+        // Nếu không có nhấn mạnh, tìm thanh điệu
+        if (!nhanManh) {
+            for (let len of thanhDieuLengths) {
+                const potentialThanhDieu = searchTerm.slice(-len); // Lấy từ cuối từ
+                if (isThanhDieuValid(potentialThanhDieu) || potentialThanhDieu === '-') {
+                    thanhDieu = potentialThanhDieu;
+                    searchTerm = searchTerm.slice(0, -len);
+                    break;
+                }
+            }
+        }
+
+        return { phuAm, van, thanhDieu, nhanManh };
+    }
+
+    function isNhanManhValid(nhanManh) {
+        return jsonData.some(row => row[0] === 'Nhấn mạnh' && row.includes(nhanManh));
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+    let pressStartTime = 0;
+
+});
+
+function toggleIPAForElement(element) {
+    // Lấy nội dung hiện tại
+    let currentContent = element.textContent.trim();
+    
+    // Kiểm tra xem nội dung đã được chuyển đổi IPA chưa
+    const isIPAConverted = element.getAttribute('data-ipa-converted') === 'true';
+    
+    if (!isIPAConverted) {
+        // Chuyển đổi sang IPA
+        let convertedContent = currentContent.split('').map(char => 
+            (char === '.' ? char : chuyểnĐổiThanhĐiệuIPA(char))
+        ).join('');
+        
+        element.textContent = convertedContent;
+        element.setAttribute('data-ipa-converted', 'true');
+    } else {
+        // Khôi phục lại nội dung gốc
+        element.textContent = currentContent.replace(/[˩˨˧˦˥]/g, char => {
+            const reverseMap = {
+                '˩': '1',
+                '˨': '2',
+                '˧': '3',
+                '˦': '4',
+                '˥': '5'
+            };
+            return reverseMap[char] || char;
+        });
+        element.setAttribute('data-ipa-converted', 'false');
+    }
+}
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+    const sheet = ["QMun", "QMien"]; // Mảng các sheet
+    const sheetSelector = document.getElementById('chọnPhươngNgữIPA');
+    const searchInput = document.getElementById('timkiemx');
+
+    // Thêm các option vào select từ mảng sheet
+    sheet.forEach(function(sheetName) {
+        const option = document.createElement('option');
+        option.value = sheetName;
+        option.textContent = sheetName;
+        sheetSelector.appendChild(option);
+    });
+
+    // Lấy tham số sheet và dữ liệu tìm kiếm từ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedSheet = sheet.find(sheetName => urlParams.has(sheetName)) || 'QMun'; // Mặc định là 'QMun' nếu không có tham số sheet
+    const searchQuery = urlParams.get(selectedSheet) || ''; // Lấy dữ liệu tìm kiếm từ URL
+
+    // Chọn sheet trong select box từ URL
+    sheetSelector.value = selectedSheet;
+
+    // Thay đổi dấu gạch dưới (_) thành dấu cách ( ) trong ô tìm kiếm
+    if (searchQuery) {
+        searchInput.value = searchQuery.replace(/_/g, ' '); // Thay thế tất cả dấu _ thành dấu cách
+    }
+
+    // Gọi hàm tải dữ liệu nếu có sheet được chọn
+    tảiFileExcel(); // Tải dữ liệu Excel sau khi đã chọn sheet
+
+    // Lắng nghe sự kiện thay đổi lựa chọn sheet
+    sheetSelector.addEventListener('change', function() {
+        const selectedValue = sheetSelector.value;
+        updateUrlWithSheet(selectedValue); // Cập nhật URL khi người dùng thay đổi sheet
+    });
+
+    // Lắng nghe sự kiện nhập liệu vào ô tìm kiếm
+    searchInput.addEventListener('input', function() {
+        const searchText = searchInput.value;
+        updateUrlWithSearch(searchText); // Cập nhật URL với dữ liệu tìm kiếm
+    });
+
+    // Cập nhật URL với tham số sheet mới và xóa tham số sheet cũ
+    function updateUrlWithSheet(sheetName) {
+        const currentUrl = new URL(window.location.href);
+        // Xóa tham số sheet cũ nếu có
+        sheet.forEach(function(sheet) {
+            currentUrl.searchParams.delete(sheet);
+        });
+        // Thêm tham số sheet mới vào URL, nhưng giữ nguyên dữ liệu tìm kiếm không mã hóa
+        currentUrl.searchParams.set(sheetName, searchInput.value.replace(/ /g, '_')); // Thay dấu cách thành _
+        window.history.replaceState(null, '', currentUrl.toString()); // Cập nhật URL mà không tải lại trang
+    }
+    function updateUrlWithSearch(searchText) {
+    const currentUrl = new URL(window.location.href);
+    // Thay thế dấu cách thành dấu _ trước khi mã hóa URL
+    const formattedSearchText = searchText.replace(/ /g, '_');
+    // Cập nhật tham số tìm kiếm cho sheet đã chọn
+    currentUrl.searchParams.set(selectedSheet, formattedSearchText); // Không mã hóa URL nữa
+    window.history.replaceState(null, '', currentUrl.toString()); // Cập nhật URL mà không tải lại trang
+}
+
+});
+    // Ẩn phần tử3, 
+
+    document.getElementById("chuỗiThựcTếKhiXửLý").style.display = "none";
+    document.getElementById("khungBảng").style.display = "none";
+    document.addEventListener('DOMContentLoaded', function() {
+
+    // Tự động kích hoạt chuyển đổi IPA khi tải trang
+    ipaConversionEnabled = true;
+    xửLýĐầuVào(); // Gọi hàm xử lý đầu vào để áp dụng chuyển đổi IPA
+});
+function locTieuDe() {
+    // Lấy giá trị từ ô nhập lọc
+    const filterText = document.getElementById('ôNhậpLọc').value.trim().toLowerCase();
+    
+    // Lấy tất cả các cột kết quả
+    const resultColumns = document.querySelectorAll('.column-result');
+    
+    // Duyệt qua từng cột để lọc
+    resultColumns.forEach(column => {
+        // Lấy tiêu đề của cột
+        const titleElement = column.querySelector('.tiêuĐềKếtQuả');
+        
+        if (titleElement) {
+            const title = titleElement.textContent.toLowerCase();
+            
+            // Kiểm tra nếu tiêu đề chứa từ khóa lọc
+            if (title.includes(filterText)) {
+                column.style.display = 'block'; // Hiển thị cột
+            } else {
+                column.style.display = 'none'; // Ẩn cột
+            }
+        }
+    });
+}
+    </script>
+</body>
+</html>

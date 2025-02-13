@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PEZ0XRXXQC"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-PEZ0XRXXQC');
+    </script>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yao Language Dictionary | 瑶族词典 | Từ điển tiếng Dao</title>
+    <meta name="description" content="Từ điển trực tuyến giúp tra cứu và học từ vựng tiếng Dao (瑶族). Hỗ trợ tìm nghĩa, phát âm và ký tự chữ Nôm Dao." />
+    
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/ci.css">
+    <link rel="stylesheet" href="css/root.css">
+</head>
+<body>
+    <!-- Header sẽ được inject vào đây -->
+    <div id="header-placeholder"></div>
+
+    <!-- Main content container -->
+    <main class="page-content">
+        <div class="dau-web">
+            
+            
+            <div class="nhom-tha-xuong">
+                <div class="khung-chon-ngon-ngu">
+                    <select id="chon-phuong-ngu-yao" onchange="handleMienMunSelection()">
+                        <option value="mien">MIEN</option>
+                        <option value="mun" selected>MUN</option>
+                    </select>
+                    <select class="language-selector" id="chon-ngon-ngu" onchange="changeLanguage()">
+                        <option value="eng">English 🇬🇧</option>
+                        <option value="zho">中文 🇨🇳</option>
+                        <option value="vie" selected>Tiếng Việt 🇻🇳</option>
+                        <option value="tha">ภาษาไทย 🇹🇭</option>
+                        <option value="lao">ພາສາລາວ 🇱🇦</option>
+                        <option value="fra">Français 🇫🇷</option>
+                        <option value="mya">မြန်မာစာ 🇲🇲</option>
+                    </select>
+                </div>
+                
+                <div class="search-container">
+                    <input type="text" id="timkiemx" placeholder="Find...">
+                    <button id="nut-tim-kiem" title="Tìm kiếm">🔍</button>
+                    <button id="nut-ngau-nhien" title="Từ ngẫu nhiên">🎲</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="danh-sach" id="danh-sach">
+            <div class="loading">Đang tải danh sách...</div>
+        </div>
+    </main>
+    <div id="tieudex" style="display: none;">Từ điển tiếng Dao</div>
+    <script src="loadHeader.js"></script>
+    <script src="lib/xlsx.full.min.js"></script>
+    <script src="js/root.js"></script>
+<script>
+      function handleMienMunSelection() {
+    const select = document.getElementById('chon-phuong-ngu-yao');
+    const searchInput = document.getElementById('timkiemx');
+    const currentValue = select.value; // 'mien' hoặc 'mun'
+    const searchTerm = searchInput.value.trim();
+
+    if (!searchTerm) {
+        locVaHienThi();
+        capNhatURL();
+        return;
+    }
+
+    // Xác định cột nguồn và cột đích
+    const sourceColumn = currentValue === 'mien' ? 'mun' : 'mien';
+    
+    // Tìm hàng chứa giá trị hiện tại
+    const matchingRow = duLieuDaLoc.find(hang => 
+        hang[sourceColumn]?.toLowerCase() === searchTerm.toLowerCase()
+    );
+
+    if (matchingRow) {
+        // Lấy giá trị tương ứng từ cột đối diện
+        const correspondingValue = matchingRow[currentValue];
+        if (correspondingValue) {
+            // Cập nhật ô tìm kiếm với giá trị mới
+            searchInput.value = correspondingValue;
+            // Thực hiện tìm kiếm với giá trị mới
+            timTrongDanhSach();
+            capNhatURL();
+        }
+    }
+
+    // Cập nhật giao diện
+    locVaHienThi();
+}
+        // Biến toàn cục
+        let duLieuGoc = [];
+        let duLieuDaLoc = [];
+        let ketQuaTimKiem = [];
+  
+        // Các hằng số
+        const CONFIG = {
+          TEN_SHEET: 'ci',
+          DUONG_DAN_FILE: 'data/dian.xlsx',
+          DELAY_NGAUNHIEN: 500,
+          SO_HANG_TAI_THEM: 10, // Số lượng mục trên mỗi trang
+          LOAD_THRESHOLD: 100 // Khoảng cách tới cuối trang để bắt đầu tải thêm (px)
+        };
+  
+        // Thêm biến toàn cục để theo dõi phân trang
+        let trangHienTai = 1;
+        let dangTai = false;
+  
+        const NHOM_NGONNGU = {
+          vie: ['zho', 'eng', 'tha', 'lao', 'fra', 'mya'],
+          zho: ['vie', 'eng', 'tha', 'lao', 'fra', 'mya'],
+          eng: ['vie', 'zho', 'tha', 'lao', 'fra', 'mya'],
+          tha: ['vie', 'zho', 'eng', 'lao', 'fra', 'mya'],
+          lao: ['vie', 'zho', 'eng', 'tha', 'fra', 'mya'],
+          fra: ['vie', 'zho', 'eng', 'tha', 'lao', 'mya'],
+          mya: ['vie', 'zho', 'eng', 'tha', 'lao', 'fra']
+        };
+  
+        const NHOM_PHUONGNGU = {
+          mun: ['mien', 'mien+'],
+          mien: ['mun', 'mun+']
+        };
+  
+        // Hàm đọc tham số từ URL
+        function docThongSoURL() {
+          const urlParams = new URLSearchParams(window.location.search);
+          for (const [key, value] of urlParams.entries()) {
+            const [phuongNgu, ngonNgu] = key.split('_');
+            if (phuongNgu && ngonNgu) {
+              const chonPhuongNguYao = document.getElementById('chon-phuong-ngu-yao');
+              const chonNgonNgu = document.getElementById('chon-ngon-ngu');
+              if (chonPhuongNguYao && NHOM_PHUONGNGU[phuongNgu]) {
+                chonPhuongNguYao.value = phuongNgu;
+              }
+              if (chonNgonNgu && NHOM_NGONNGU[ngonNgu]) {
+                chonNgonNgu.value = ngonNgu;
+              }
+              if (value === '???') {
+                setTimeout(() => timTuNgauNhien(), CONFIG.DELAY_NGAUNHIEN);
+              } else if (value) {
+                const tuKhoa = decodeURIComponent(value).replace(/_/g, ' ');
+                document.getElementById('timkiemx').value = tuKhoa;
+                setTimeout(() => timTrongDanhSach(), 0);
+              }
+              return true;
+            }
+          }
+          return false;
+        }
+  // Function to update both the iframe's URL and parent's address bar
+function capNhatURL(laNgauNhien = false) {
+  const phuongNgu = document.getElementById('chon-phuong-ngu-yao').value;
+  const ngonNgu = document.getElementById('chon-ngon-ngu').value;
+  let tuKhoa = document.getElementById('timkiemx').value.trim();
+  let queryParams = '';
+  
+  if (phuongNgu && ngonNgu) {
+    queryParams = `${phuongNgu}_${ngonNgu}`;
+    if (laNgauNhien) {
+      queryParams += '=???';
+    } else if (tuKhoa) {
+      tuKhoa = tuKhoa.replace(/\s+/g, '_');
+      queryParams += `=${encodeURIComponent(tuKhoa)}`;
+    }
+  }
+
+  // Update iframe's URL
+  const url = queryParams ? `ci.html?${queryParams}` : 'ci.html';
+  window.history.replaceState({}, '', url);
+  
+  // Notify parent to update address bar - send just the query parameters
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({
+      type: 'iframeUrlChange',
+      tabId: 'ci',
+      newUrl: queryParams ? `ci?${queryParams}` : 'ci'
+    }, '*');
+  }
+}
+  
+        // Hàm tìm từ ngẫu nhiên
+        function timTuNgauNhien() {
+          if (duLieuDaLoc.length > 0) {
+            const chiSoNgauNhien = Math.floor(Math.random() * duLieuDaLoc.length);
+            const tuNgauNhien = duLieuDaLoc[chiSoNgauNhien];
+            const giaTriHienThi = tuNgauNhien['vuong'] || Object.values(tuNgauNhien)[0];
+            document.getElementById('timkiemx').value = giaTriHienThi;
+            timTrongDanhSach();
+            capNhatURL(true);
+          }
+        }
+  
+        // Sửa lại các event listener
+        function khoiTaoSuKien() {
+          document.getElementById('chon-ngon-ngu').addEventListener('change', () => {
+            locVaHienThi();
+            capNhatURL();
+            timTrongDanhSach();
+          });
+          document.getElementById('chon-phuong-ngu-yao').addEventListener('change', () => {
+            locVaHienThi();
+            capNhatURL();
+            timTrongDanhSach();
+          });
+          document.getElementById('nut-tim-kiem').addEventListener('click', () => {
+            timTrongDanhSach();
+            capNhatURL();
+          });
+          document.getElementById('timkiemx').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+              timTrongDanhSach();
+              capNhatURL();
+            }
+          });
+          document.getElementById('nut-ngau-nhien').addEventListener('click', timTuNgauNhien);
+          window.addEventListener('scroll', () => {
+            kiemTraVaTaiThem();
+          });
+          let timeoutId;
+          window.addEventListener('scroll', () => {
+            if (timeoutId) {
+              clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => {
+              kiemTraVaTaiThem();
+            }, 100);
+          });
+        }
+  
+        // Hàm khởi tạo
+        async function taiDuLieuExcel() {
+          try {
+            const phanHoi = await fetch(CONFIG.DUONG_DAN_FILE);
+            const duLieu = await phanHoi.arrayBuffer();
+            const workbook = XLSX.read(duLieu, { type: 'array' });
+            const tenSheet = workbook.SheetNames.find(sheet => sheet === CONFIG.TEN_SHEET);
+            if (!tenSheet) {
+              throw new Error(`Không tìm thấy sheet có tên "${CONFIG.TEN_SHEET}"`);
+            }
+            duLieuGoc = XLSX.utils.sheet_to_json(workbook.Sheets[tenSheet], { header: 1 });
+            if (duLieuGoc.length > 0) {
+              khoiTaoSuKien();
+              const coThongSoURL = docThongSoURL();
+              locVaHienThi();
+              if (coThongSoURL && document.getElementById('timkiemx').value) {
+                timTrongDanhSach();
+              }
+            }
+          } catch (lỗi) {
+            console.error('Lỗi khi tải file Excel:', lỗi);
+            document.getElementById('danh-sach').innerHTML = 
+              '<div class="error">Không thể tải dữ liệu. Vui lòng thử lại sau.</div>';
+          }
+        }
+  
+        // Hàm lọc & hiển thị dữ liệu
+        function locVaHienThi() {
+          const ngonNgu = document.getElementById('chon-ngon-ngu').value;
+          const phuongNgu = document.getElementById('chon-phuong-ngu-yao').value;
+          const tiêuĐề = duLieuGoc[0];
+          duLieuDaLoc = [];
+          trangHienTai = 1;
+          dangTai = false;
+          for (let i = 1; i < duLieuGoc.length; i++) {
+            const hang = duLieuGoc[i];
+            let duLieuHàng = {};
+            let coDuLieuPhuHop = false;
+            tiêuĐề.forEach((têncột, j) => {
+              const giaTri = hang[j];
+              if (!giaTri) return;
+              const canAnNgonNgu = NHOM_NGONNGU[ngonNgu]?.some(ng => têncột.includes(ng));
+              const canAnPhuongNgu = NHOM_PHUONGNGU[phuongNgu]?.some(v => têncột.includes(v));
+              if (!canAnNgonNgu && !canAnPhuongNgu) {
+                duLieuHàng[têncột] = giaTri;
+              }
+              if (têncột.includes(ngonNgu) && têncột.includes(phuongNgu) && giaTri) {
+                coDuLieuPhuHop = true;
+              }
+            });
+            if (coDuLieuPhuHop && Object.keys(duLieuHàng).length > 0) {
+              duLieuDaLoc.push(duLieuHàng);
+            }
+          }
+          ketQuaTimKiem = duLieuDaLoc;
+          hienThiDanhSach(duLieuDaLoc, '', false);
+        }
+  
+        // Hàm hiển thị danh sách
+        function hienThiDanhSach(duLieuHiểnThị = duLieuDaLoc, tuKhoaTimKiem = '', thêmVào = false) {
+          const danhSáchElement = document.getElementById('danh-sach');
+          if (!duLieuHiểnThị.length) {
+            danhSáchElement.innerHTML = '<div class="no-results">Không tìm thấy kết quả nào</div>';
+            return;
+          }
+          const batDau = thêmVào ? (trangHienTai - 1) * CONFIG.SO_HANG_TAI_THEM : 0;
+          const ketThuc = trangHienTai * CONFIG.SO_HANG_TAI_THEM;
+          const duLieuTrang = duLieuHiểnThị.slice(batDau, ketThuc);
+          const htmlContent = duLieuTrang
+            .map(hang => thietKeGiaoDienHang(hang, tuKhoaTimKiem))
+            .join('');
+          if (thêmVào) {
+            danhSáchElement.insertAdjacentHTML('beforeend', htmlContent);
+          } else {
+            danhSáchElement.innerHTML = htmlContent;
+          }
+        }
+  
+        // Hàm kiểm tra và tải thêm dữ liệu
+        function kiemTraVaTaiThem() {
+          if (dangTai) return;
+          const danhSáchElement = document.getElementById('danh-sach');
+          const cuộn = window.innerHeight + window.pageYOffset;
+          const chiềuCao = document.documentElement.scrollHeight;
+          if (cuộn >= chiềuCao - CONFIG.LOAD_THRESHOLD) {
+            const duLieuHiệnTại = ketQuaTimKiem.length > 0 ? ketQuaTimKiem : duLieuDaLoc;
+            const batDau = trangHienTai * CONFIG.SO_HANG_TAI_THEM;
+            if (batDau < duLieuHiệnTại.length) {
+              taiThemDuLieu();
+            }
+          }
+        }
+  
+        // Hàm tải thêm dữ liệu
+        function taiThemDuLieu() {
+          if (dangTai) return;
+          dangTai = true;
+          const duLieuHiệnTại = ketQuaTimKiem.length > 0 ? ketQuaTimKiem : duLieuDaLoc;
+          const tuKhoa = document.getElementById('timkiemx').value;
+          const batDau = trangHienTai * CONFIG.SO_HANG_TAI_THEM;
+          const ketThuc = (trangHienTai + 1) * CONFIG.SO_HANG_TAI_THEM;
+          if (batDau < duLieuHiệnTại.length) {
+            trangHienTai++;
+            hienThiDanhSach(duLieuHiệnTại, tuKhoa, true);
+            console.log(`Đã tải thêm: ${batDau} đến ${ketThuc} / ${duLieuHiệnTại.length}`);
+          }
+          setTimeout(() => {
+            dangTai = false;
+          }, 100);
+        }
+  
+        // Hàm xử lý nội dung ngôn ngữ
+        function xuLyNoiDungGiaiNghia(text, tuKhoaTim = '', loaiTim = 'mun') {
+          if (!text) return '';
+  
+          function danhDauTuKhoa(text, tuKhoa) {
+            if (!tuKhoa) return text;
+            const regex = new RegExp(`(${tuKhoa})`, 'gi');
+            return text.replace(regex, '<b>$1</b>');
+          }
+  
+          function taoLienKetVidu(viDu) {
+            // Directly navigate to ipa.html instead of opening a popup.
+            const param = loaiTim === 'mun' ? 'QMun' : 'QMien';
+            return `<span 
+                      class="vi-du"
+                      style="cursor: pointer; user-select: text;"
+                      onclick="window.location.href='ipa.html?${param}='+encodeURIComponent(viDu)">
+                      ${danhDauTuKhoa(viDu, tuKhoaTim)}
+                    </span>`;
+          }
+  
+          const lines = text.split('\n').filter(line => line.trim());
+          const wordGroups = {};
+          lines.forEach(line => {
+            const parts = line.split('#').map(part => part.trim());
+            const phanDauTien = parts[0];
+            const tuLoaiMatch = phanDauTien.match(/^\[(.*?)\]/);
+            if (tuLoaiMatch) {
+              const tuLoai = tuLoaiMatch[1];
+              const tuChinh = phanDauTien.substring(tuLoaiMatch[0].length).trim();
+              if (!wordGroups[tuLoai]) {
+                wordGroups[tuLoai] = [];
+              }
+              wordGroups[tuLoai].push({
+                tu: tuChinh,
+                viDu: parts.slice(1)
+              });
+            } else {
+              if (!wordGroups['']) {
+                wordGroups[''] = [];
+              }
+              wordGroups[''].push({
+                tu: phanDauTien,
+                viDu: parts.slice(1)
+              });
+            }
+          });
+  
+          let html = '';
+          Object.entries(wordGroups).forEach(([tuLoai, words]) => {
+            if (tuLoai) {
+              html += `<div class="tu-loai">
+                        ${tuLoai.charAt(0).toUpperCase() + tuLoai.slice(1)} Từ
+                       </div>`;
+            }
+            words.forEach(word => {
+              html += `<div class="tu-chinh">${word.tu}</div>`;
+              if (word.viDu.length > 0) {
+                html += '<div class="khung-vi-du">';
+                word.viDu.forEach((example, index) => {
+                  const [viDu, giaiThich] = example.split('=').map(p => p.trim());
+                  html += `<div>
+                            ${index + 1}. ${taoLienKetVidu(viDu)}
+                            ${giaiThich ? `— <span class="vi-du-giai-thich">${giaiThich}</span>` : ''}
+                          </div>`;
+                });
+                html += '</div>';
+              }
+            });
+          });
+          return html;
+        }
+  
+        // Hàm tạo HTML cho một hàng dữ liệu
+        function thietKeGiaoDienHang(hang, tuKhoaTimKiem = '') {
+          const toSangTuKhoa = (text) => {
+            if (!text || !tuKhoaTimKiem) return text;
+            const regex = new RegExp(`(${tuKhoaTimKiem})`, 'gi');
+            return text.toString().replace(regex, '<span class="to-sang-tim-kiem">$1</span>');
+          };
+  
+          // Link chuyển qua trang Chữ Nôm (vuông)
+          const taoLienKetCotVuong = (giaTri) => {
+            if (!giaTri) return '';
+            const giaTriHienThi = tuKhoaTimKiem ? toSangTuKhoa(giaTri) : giaTri;
+            return `<a href="zi.html?zi=${encodeURIComponent(giaTri)}" 
+                        onclick="window.parent.updateIframe('zi', 'zi.html?zi=${encodeURIComponent(giaTri)}'); return false;"
+                        class="vuong"
+                        title="Xem '${giaTri}' trên zi">
+                        <span>${giaTriHienThi}</span>
+                    </a>`;
+          };
+  
+          // Link chuyển sang trang IPA
+          const taoLienKetIPA = (loai, giaTri) => {
+            if (!giaTri) return '';
+            const param = loai === 'mun' ? 'QMun' : 'QMien';
+            const kyTuLoaiBo = /[⁰¹²³⁴⁵⁶⁷⁸⁹]/g;
+            const giaTriURL = giaTri.replace(kyTuLoaiBo, '');
+            const giaTriHienThi = tuKhoaTimKiem ? toSangTuKhoa(giaTri) : giaTri;
+            return `<a href="ipa.html?${param}=${encodeURIComponent(giaTriURL)}" 
+                        onclick="window.parent.updateIframe('ipa', 'ipa.html?${param}=${encodeURIComponent(giaTriURL)}'); return false;"
+                        class="${loai.toLowerCase()}"
+                        title="Xem '${giaTri}' trên IPA">
+                        <span>${giaTriHienThi}</span>
+                    </a>`;
+          };
+  
+          const vuong = taoLienKetCotVuong(hang['vuong'] || '');
+          const mun = taoLienKetIPA('mun', hang['mun']);
+          const mien = taoLienKetIPA('mien', hang['mien']);
+          const munn = taoLienKetIPA('mun+', hang['mun+']);
+          const mienn = taoLienKetIPA('mien+', hang['mien+']);
+          // Xử lý các cột khác
+          const munViet = xuLyNoiDungGiaiNghia(hang['mun:vie'] || '', hang['mun'] || '', 'mun');
+          const mienViet = xuLyNoiDungGiaiNghia(hang['mien:vie'] || '', hang['mien'] || '', 'mien');
+          const munTrung = xuLyNoiDungGiaiNghia(hang['mun:zho'] || '', hang['mun'] || '', 'mun');
+          const mienTrung = xuLyNoiDungGiaiNghia(hang['mien:zho'] || '', hang['mien'] || '', 'mien');
+          const munAnh = xuLyNoiDungGiaiNghia(hang['mun:eng'] || '', hang['mun'] || '', 'mun');
+          const mienAnh = xuLyNoiDungGiaiNghia(hang['mien:eng'] || '', hang['mien'] || '', 'mien');
+          const munThai = xuLyNoiDungGiaiNghia(hang['mun:tha'] || '', hang['mun'] || '', 'mun');
+          const mienThai = xuLyNoiDungGiaiNghia(hang['mien:tha'] || '', hang['mien'] || '', 'mien');
+          const munLao = xuLyNoiDungGiaiNghia(hang['mun:lao'] || '', hang['mun'] || '', 'mun');
+          const mienLao = xuLyNoiDungGiaiNghia(hang['mien:lao'] || '', hang['mien'] || '', 'mien');
+          const munPhap = xuLyNoiDungGiaiNghia(hang['mun:fra'] || '', hang['mun'] || '', 'mun');
+          const mienPhap = xuLyNoiDungGiaiNghia(hang['mien:fra'] || '', hang['mien'] || '', 'mien');
+          const munMyanma = xuLyNoiDungGiaiNghia(hang['mun:mya'] || '', hang['mun'] || '', 'mun');
+          const mienMyanma = xuLyNoiDungGiaiNghia(hang['mien:mya'] || '', hang['mien'] || '', 'mien');
+  
+          const taoGocHTML = (nhãn, giaTri, lop) => {
+            if (!giaTri) return '';
+            const giaTriHienThi = tuKhoaTimKiem ? toSangTuKhoa(giaTri) : giaTri;
+            return `<span class="${lop}">${nhãn}: ${giaTriHienThi}</span>`;
+          };
+  // Tạo phần HTML cho mun/munn và mien/mienn có điều kiện
+  const taoHtmlMun = () => {
+    if (!hang['mun']) return '';
+    return `<span class="mun">${mun}${hang['mun+'] ? `(${munn})` : ''}</span>`;
+  };
+
+  const taoHtmlMien = () => {
+    if (!hang['mien']) return '';
+    return `<span class="mien">${mien}${hang['mien+'] ? `(${mienn})` : ''}</span>`;
+  };
+
+  return `
+    <div class="hang-danh-sach">
+      <div class="muc-tu-chinh">
+        ${taoHtmlMun()}
+        ${taoHtmlMien()}
+        <span class="vuong">${vuong}</span>
+      </div>
+      <div class="y-nghia">
+        <div>${munViet}${mienViet}</div>
+        <div>${munTrung}${mienTrung}</div>
+        <div>${munAnh}${mienAnh}</div>
+        <div>${munThai}${mienThai}</div>
+        <div>${munLao}${mienLao}</div>
+        <div>${munPhap}${mienPhap}</div>
+        <div>${munMyanma}${mienMyanma}</div>
+      </div>
+      <div class="proto-pre">
+        ${taoGocHTML('PROTO', hang['Proto'], 'proto')}
+        ${taoGocHTML('Pre', hang['Pre'], 'pre')}
+        ${taoGocHTML('Proto Liu', hang['Proto Liu'], 'proto-liu')}
+      </div>
+    </div>
+  `;
+}
+  
+        // Hàm tìm kiếm trong danh sách
+        function timTrongDanhSach() {
+          const tuKhoa = document.getElementById('timkiemx').value.toLowerCase();
+          trangHienTai = 1;
+          if (!tuKhoa) {
+            ketQuaTimKiem = duLieuDaLoc;
+            hienThiDanhSach();
+            return;
+          }
+          ketQuaTimKiem = duLieuDaLoc.filter(hang =>
+            Object.values(hang).some(giaTri =>
+              giaTri.toString().toLowerCase().includes(tuKhoa)
+            )
+          );
+          hienThiDanhSach(ketQuaTimKiem, tuKhoa, false);
+        }
+  
+        // Khởi chạy ứng dụng khi tài liệu được tải xong
+        document.addEventListener('DOMContentLoaded', taiDuLieuExcel);
+        // Example of link handling in ci.html
+function handleLinkClick(event, targetTabId, targetUrl) {
+  event.preventDefault();
+  
+  // Update parent URL immediately
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({
+      type: 'iframeUrlChange',
+      tabId: targetTabId,
+      newUrl: targetUrl
+    }, '*');
+  }
+  
+  // Then proceed with navigation
+  window.location.href = targetUrl;
+}
+
+
+      </script>
+</body>
+</html>
