@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const content = document.getElementById("content");
 
     function loadPage(slug) {
-        fetch(`${slug}.md`)  // Tự động thêm ".md"
+        fetch(`/file/${slug}.md`) // Load từ thư mục file/
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Không tìm thấy nội dung.");
