@@ -1,33 +1,36 @@
 document.addEventListener("DOMContentLoaded", () => {
     const content = document.getElementById("content");
 
-    // Khi click vào link, ngăn tải lại trang & load Markdown
-    document.querySelectorAll("nav a").forEach(link => {
-        link.addEventListener("click", function(event) {
-            event.preventDefault();
-            const page = this.getAttribute("href"); // Lấy URL ngắn (không có .md)
-            loadMarkdown(page);
-            history.pushState(null, "", page); // Cập nhật URL nhưng không reload
+    function loadPage(path) {
+        fetch(path)
+            .then(response => response.text())
+            .then(md => {
+                content.innerHTML = marked.parse(md); // Chuyển đổi Markdown thành HTML
+            })
+            .catch(error => content.innerHTML = "Không tìm thấy nội dung.");
+    }
+
+    // Khi tải trang, kiểm tra nếu URL có chứa file .md thì tự động tải
+    if (location.pathname.endsWith(".md")) {
+        loadPage(location.pathname);
+    }
+
+    // Xử lý khi nhấn vào link Markdown
+    document.querySelectorAll("a").forEach(link => {
+        link.addEventListener("click", (event) => {
+            if (event.target.getAttribute("href").endsWith(".md")) {
+                event.preventDefault();
+                const path = event.target.getAttribute("href");
+                history.pushState(null, "", path);
+                loadPage(path);
+            }
         });
     });
 
-    // Load file Markdown từ URL (thêm .md để tải đúng file)
-    function loadMarkdown(page) {
-        fetch(page + ".md") // Tự động thêm .md khi tải file
-            .then(response => response.text())
-            .then(md => {
-                content.innerHTML = marked.parse(md);
-            })
-            .catch(error => console.error("Lỗi khi tải Markdown:", error));
-    }
-
-    // Nếu người dùng tải lại trang, lấy nội dung từ URL
-    if (location.pathname !== "/") {
-        loadMarkdown(location.pathname);
-    }
-
-    // Xử lý khi người dùng bấm Back/Forward trên trình duyệt
-    window.addEventListener("popstate", () => {
-        loadMarkdown(location.pathname);
-    });
+    // Xử lý khi người dùng nhấn "Quay lại" trên trình duyệt
+    window.onpopstate = () => {
+        if (location.pathname.endsWith(".md")) {
+            loadPage(location.pathname);
+        }
+    };
 });
