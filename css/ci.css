@@ -1,0 +1,244 @@
+/* GitHub-Inspired Dark Mode Responsive CSS with Corrected Desktop Header Alignment */
+
+/* Base Variables for Dark Mode */
+:root {
+    --color-bg: #0d1117;             /* Dark background similar to GitHub's dark theme */
+    --color-text: #c9d1d9;           /* Light text color */
+    --color-border: #30363d;         /* Borders and dividers */
+    --color-accent: #58a6ff;         /* Accent color, used for buttons and highlights */
+    --color-link: #58a6ff;           /* Link color */
+    --color-input-bg: #161b22;       /* Input background */
+    --color-input-border: #30363d;   /* Input border */
+    --header-bg: #161b22;            /* Header background */
+    --header-color: #c9d1d9;         /* Header text color */
+    --button-hover: #1f6feb;         /* Button hover effect */
+  }
+  
+  /* Global Styles */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  }
+  
+  html {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  
+  /* Header Styling */
+  .dau-web {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Center content horizontally */
+    padding: 0.8rem 2rem;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--color-border);
+  }
+  
+  /* Left Section: Logo or other primary info */
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    /* With flex container centered, give the left section auto margin to push other elements to their proper place */
+    margin-right: auto;
+  }
+  
+  .header-logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  /* Dark/Light Mode Toggle Button */
+  #khung-sang-toi {
+    /* No auto margins so that toggle stays close to the controls */
+    margin-left: 1rem;
+  }
+  
+  #nut-sang-toi {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+    color: var(--header-color);
+  }
+  
+  /* Container for language selection, dropdowns, and search */
+  .nhom-tha-xuong {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  /* Dropdown Styles */
+  .khung-chon-ngon-ngu select,
+  .language-selector {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    background-color: var(--color-input-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  /* Search Container */
+  .search-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .search-container input[type="text"] {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--color-input-border);
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 250px;
+    background-color: var(--color-input-bg);
+    color: var(--color-text);
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .search-container input[type="text"]:focus {
+    outline: none;
+    border-color: var(--button-hover);
+    box-shadow: 0 0 0 3px rgba(27, 125, 194, 0.3);
+  }
+  
+  .search-container button {
+    background-color: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    color: #fff;
+    padding: 0.5rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  
+  .search-container button:hover {
+    background-color: var(--button-hover);
+  }
+  
+  /* Main Content Area */
+  .danh-sach {
+    padding: 1rem;
+    max-width: 600px;
+    margin: 1rem auto;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+  }
+  
+  /* Item Spacing in Content List */
+  .danh-sach > div {
+    border-bottom: 1px solid var(--color-border);
+    padding: 0.75rem 0;
+  }
+  .danh-sach > div:last-child {
+    border-bottom: none;
+  }
+  
+  .loading {
+    text-align: center;
+    font-size: 1.25rem;
+    padding: 2rem;
+  }
+  
+  /* Link Styling */
+  a {
+    color: var(--color-link);
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Mobile Header Optimization: Two Rows */
+  /* On mobile, the header content is stacked into two rows (dropdowns on the 1st row, search controls on the 2nd) */
+  @media (max-width: 600px) {
+    /* Hide dark/light mode toggle for mobile */
+    #khung-sang-toi {
+      display: none;
+    }
+    
+    .dau-web {
+      flex-direction: column;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      gap: 0.5rem;
+    }
+    
+    /* First row: Dropdown selectors */
+    .nhom-tha-xuong {
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      gap: 0.5rem;
+      padding: 0 1rem;
+    }
+    
+    .khung-chon-ngon-ngu {
+      display: flex;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 320px;
+      justify-content: center;
+    }
+    
+    /* Second row: Search container */
+    .search-container {
+      flex-direction: row;
+      align-items: center;
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 320px;
+      justify-content: center;
+      padding: 0 1rem;
+    }
+    
+    .search-container input[type="text"] {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+    
+    .danh-sach {
+      margin: 1rem;
+      width: calc(100% - 2rem);
+      box-sizing: border-box;
+    }
+  }
+  .muc-tu-chinh {
+    font-size: larger;
+  }
+  .mun, .mien {
+    white-space: nowrap;
+  }
+  .tu-loai {
+    color:olive;
+  }
+  .tu-chinh {
+    margin-left: 10px;
+  }
+  .khung-vi-du {
+    margin-left: 20px;
+  }
+  .vi-du {
+    font-style: italic;
+  }
+  .proto-pre {
+    color:rgb(122, 122, 122);
+  }

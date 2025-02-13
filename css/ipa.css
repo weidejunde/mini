@@ -1,0 +1,178 @@
+
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    margin: 0;
+    padding: 16px;
+}
+
+h3 {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    text-align: center;
+    color: #58a6ff; /* GitHub blue */
+}
+
+#button-container {
+    display: flex; /* Dùng flexbox để căn chỉnh ngang */
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    padding: 5px; /* Tạo khoảng cách bên trong container */
+    gap: 10px; /* Tạo khoảng cách giữa các phần tử */
+    flex-wrap: nowrap; /* Không cho phép các phần tử xuống dòng */
+}
+
+#input-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#chọnPhươngNgữIPA {
+    padding: 8px;
+    text-align: center;
+    background-color: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    outline: none;
+    width: auto; /* Adjust width based on content */
+    max-width: 300px;
+    box-sizing: border-box;
+}
+
+
+#ôNhậpLọc {
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    width: 70%;
+    background-color: #161b22;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    outline: none;
+    box-sizing: border-box;
+    opacity: 0.8; /* Less prominent */
+    margin: 0 auto; /* Center horizontally */
+    display: block; /* Ensure the element behaves like a block element */
+}
+
+#ôNhậpDữLiệu {
+    text-align: center;
+    padding: 10px; /* Larger padding to make it more prominent */
+    font-weight: bolder; /* Bolder font weight */
+    color: #ffffff; /* Brighter text color */
+    background-color: #0d1117; /* Ensure it stands out */
+    font-size: 16px;
+    border: 2px solid #30363d; /* Default border */
+    border-radius: 6px;
+    transition: border-color 0.3s; /* Smooth transition for border color */
+}
+
+#ôNhậpDữLiệu:focus {
+    border-color: #238636; /* Green border when focused */
+    outline: none; /* Remove default browser outline */
+}
+
+button {
+    padding: 8px;
+    background-color: #238636; /* GitHub green */
+    color: #ffffff;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+    max-width: 300px;
+    box-sizing: border-box;
+}
+
+button:hover {
+    background-color: #2ea043;
+}
+
+#khungBảng {
+    margin-top: 20px;
+    padding: 10px;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: #0d1117;
+    color: #c9d1d9;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+}
+
+th, td {
+    padding: 12px 16px;
+    border: 1px solid #30363d;
+    border-radius: 6px; /* Round the corners of each cell */
+}
+
+tr:first-child th, tr:first-child td {
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+}
+
+tr:last-child td {
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+}
+
+.column-result {
+    padding: 10px;
+    margin: 5px;
+    color: #c9d1d9;
+    background-color: #161b22;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    border-radius: 6px; /* Round the corners of the result columns */
+}
+
+#kếtQuảTìmKiếm {
+    text-align: center;
+    padding: 5px;
+}
+
+.tiêuĐềKếtQuả {
+    font-size: smaller;
+    color: #8b949e;
+    text-align: center;
+}
+
+.nộiDungKếtQuả {
+    font-size: 20px;
+    color: #58a6ff;
+    font-family:Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+    margin-top: 10px;
+}
+
+.thôngBáoLỗi {
+    color: #d73a49;
+    text-align: center;
+    font-size: 18px;
+}
+
+p {
+    text-align: center;
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 30px;
+}
+
+hr {
+    border: 0;
+    height: 1px;
+    background: #30363d;
+    margin: 20px 0;
+}

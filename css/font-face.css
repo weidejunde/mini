@@ -1,0 +1,24 @@
+@font-face {
+    font-family: 'SIL';
+    src: url('../fonts/CharisSILR.ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Jigmo';
+    src: url('../fonts/Jigmo.woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Jigmo2';
+    src: url('../fonts/Jigmo2.woff');
+    font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'Jigmo3';
+    src: url('../fonts/Jigmo3.woff');
+    font-weight: normal;
+    font-style: normal;
+}
